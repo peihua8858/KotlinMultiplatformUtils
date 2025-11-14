@@ -303,9 +303,8 @@ fun CharSequence?.phoneMask(): String {
 const val MOBILE_PHONE =
     "^((\\+86)?(13\\d|14[5-9]|15[0-35-9]|16[5-6]|17[0-8]|18\\d|19[158-9])\\d{8})$"
 
-val MOBILE_PHONE_PATTERN: Pattern = Pattern.compile(MOBILE_PHONE)
 fun CharSequence?.isPhoneNumber(): Boolean {
-    return this != null && MOBILE_PHONE_PATTERN.matcher(this).matches()
+    return this != null && Pattern.compile(MOBILE_PHONE).matcher(this).matches()
 }
 
 /**

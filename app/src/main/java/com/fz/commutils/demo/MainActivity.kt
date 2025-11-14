@@ -21,6 +21,8 @@ import com.fz.common.utils.*
 import com.fz.commutils.demo.model.*
 import com.fz.commutils.demo.model.AppUtils.startCameraActivity
 import com.fz.toast.showToast
+import com.peihua.tools.map.deepCloneMapOfParcelableList
+import com.peihua.tools.map.findKey
 import com.socks.library.KLog
 import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
@@ -42,6 +44,7 @@ class MainActivity : AppCompatActivity() {
         val btnExecute1 = findViewById<View>(R.id.btnExecute1)
         val textView = findViewById<View>(R.id.textView)
         val textView1 = findViewById<View>(R.id.textView1)
+        val map =mapOf<String, MutableList<PointBean>>()
         viewModel.viewState.observe(this) {
             if (it.isStarting()) {
                 dLog { "Starting:" + if (isMainThread()) "在主线程" else "在子线程" }
