@@ -141,14 +141,4 @@ fun <K : Any, V : Any> Map<K, V>.deepClone(): Map<K, V>? {
     }
 }
 
-/**
- * 集合转成String输出
- *
- * @param <T>       泛型参数，集合中放置的元素数据类型
- * @return 如果集合不为空返回输出字符串，否则返回"null"
- */
-inline fun <K, V, R> Map<K, V>.splicing(action: (Map.Entry<K, V>) -> R): String {
-    return splicing(",", action)
-}
-
 fun Map<String, Any?>.toBundle(): Bundle = bundleOf(*this.toList().toTypedArray())

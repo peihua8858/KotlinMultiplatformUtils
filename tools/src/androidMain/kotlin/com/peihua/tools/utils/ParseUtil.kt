@@ -1,3 +1,5 @@
+@file:JvmName("ParseUtil")
+@file:JvmMultifileClass
 package com.peihua.tools.utils
 
 import android.content.Context

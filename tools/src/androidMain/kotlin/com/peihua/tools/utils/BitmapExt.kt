@@ -2,7 +2,6 @@ package com.peihua.tools.utils
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
@@ -14,9 +13,6 @@ import android.renderscript.RenderScript
 import android.renderscript.ScriptIntrinsicBlur
 import androidx.core.graphics.createBitmap
 import androidx.exifinterface.media.ExifInterface
-import java.io.File
-import java.io.FileInputStream
-import kotlin.math.max
 
 /**
  * Bitmap高斯模糊
@@ -88,43 +84,6 @@ fun Bitmap.adjustBitmapOrientation(filePath: String): Bitmap? {
     )
 }
 
-
-fun String.decodePathOptionsFile(screenWidth: Int, screenHeight: Int): Bitmap? {
-    try {
-        val mScreenWidth = screenWidth
-        val mScreenHeight = screenHeight
-        val file = File(this)
-        val o = BitmapFactory.Options()
-        o.inJustDecodeBounds = true
-        BitmapFactory.decodeStream(FileInputStream(file), null, o)
-        val width_tmp = o.outWidth
-        val height_tmp = o.outHeight
-        var scale = 1
-        if (width_tmp <= mScreenWidth && height_tmp <= mScreenHeight) {
-            scale = 1
-        } else {
-            val widthFit: Double = width_tmp * 1.0 / mScreenWidth
-            val heightFit: Double = height_tmp * 1.0 / mScreenHeight
-            val fit = max(widthFit, heightFit)
-            scale = (fit + 0.5).toInt()
-        }
-        var bitmap: Bitmap? = null
-        if (scale == 1) {
-            bitmap = BitmapFactory.decodeStream(FileInputStream(file))
-        } else {
-            val o2 = BitmapFactory.Options()
-            o2.inSampleSize = scale
-            bitmap = BitmapFactory.decodeStream(FileInputStream(file), null, o2)
-        }
-        if (bitmap != null) {
-            eLog { "scale = " + scale + " bitmap.size = " + (bitmap.getRowBytes() * bitmap.getHeight()) }
-        }
-        return bitmap
-    } catch (e: Throwable) {
-        eLog { "fileNotFoundException, e: $e" }
-    }
-    return null
-}
 
 fun Bitmap.toBlackAndWhite(): Bitmap {
     val bmpMonochrome = createBitmap(width, height)

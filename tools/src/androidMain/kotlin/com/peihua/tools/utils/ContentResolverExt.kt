@@ -23,6 +23,7 @@ import androidx.core.net.toUri
 import com.peihua.tools.ContextInitializer
 import com.peihua.tools.file.copyToFile
 import com.peihua.tools.file.createFileName
+import com.peihua.tools.file.fetchFileName
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -107,12 +108,14 @@ fun Context.getFileFromUri(uri: Uri?): File? {
  */
 fun Context.getFileFromContentUri(contentUri: Uri?): File? {
     val contentResolver = contentResolver ?: return null
-    val filePath = contentResolver.getFieldFromContentUri(contentUri, MediaStore.Images.Media.DATA)
+    val filePath =
+        contentResolver.getFieldFromContentUri(contentUri, MediaStore.Files.FileColumns.DATA)
     if (filePath.isNonEmpty()) {
         return File(filePath)
     }
     return null
 }
+
 
 /**
  * 保存图片[source]到系统相册
@@ -121,26 +124,27 @@ fun Context.getFileFromContentUri(contentUri: Uri?): File? {
  * @param description 文件描述
  */
 fun ContentResolver.saveBitmapToGallery(
+    uri: Uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+    folderName: String = "",
     source: Bitmap,
     title: String,
     description: String,
-): String? {
+): Uri? {
     val values = ContentValues()
     values.put(MediaStore.Images.Media.TITLE, title)
     values.put(MediaStore.Images.Media.DISPLAY_NAME, title)
     values.put(MediaStore.Images.Media.DESCRIPTION, description)
     values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+    if (folderName.isNonEmpty()) {
+        values.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/$folderName")
+    }
     // Add the date meta data to ensure the image is added at the front of the gallery
     values.put(MediaStore.Images.Media.DATE_ADDED, System.currentTimeMillis())
     values.put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
     try {
-        return insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)?.let {
+        return insert(uri, values)?.let {
             openOutputStream(it)?.use {
-                try {
-                    source.compress(Bitmap.CompressFormat.JPEG, 100, it)
-                } catch (ex: FileNotFoundException) {
-                    ex.printStackTrace()
-                }
+                source.compress(Bitmap.CompressFormat.JPEG, 100, it)
             }
             val id = ContentUris.parseId(it)
             // Wait until MINI_KIND thumbnail is generated.
@@ -157,14 +161,13 @@ fun ContentResolver.saveBitmapToGallery(
                 // This is for backward compatibility.
                 storeThumbnail(miniThumb, id, 50f, 50f, MediaStore.Images.Thumbnails.MICRO_KIND)
             }
-
             // Everything went well above, publish it!
             values.clear()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 values.put(MediaStore.MediaColumns.IS_PENDING, 0)
             }
             update(it, values, null, null);
-            return it.toString()
+            return it
         }
     } catch (e: java.lang.Exception) {
         return null
@@ -210,15 +213,23 @@ private fun ContentResolver.storeThumbnail(
     }
 }
 
+
 fun ContentResolver.saveFileToExternal(source: File, mimeType: String): Uri? {
-    return saveFileToExternal(source, source.name, source.nameWithoutExtension, mimeType)
+    return saveFileToExternal(source = source, displayName = source.name, mimeType = mimeType)
 }
 
 fun ContentResolver.saveFileToExternal(source: File, displayName: String, mimeType: String): Uri? {
-    return saveFileToExternal(source, displayName, source.nameWithoutExtension, mimeType)
+    return saveFileToExternal(
+        source = source,
+        displayName = displayName,
+        title = source.nameWithoutExtension,
+        mimeType = mimeType
+    )
 }
 
 fun ContentResolver.saveFileToExternal(
+    uri: Uri = MediaStore.Files.getContentUri("external"),
+    folderName: String = "",
     source: File,
     displayName: String,
     title: String,
@@ -228,11 +239,14 @@ fun ContentResolver.saveFileToExternal(
     values.put(MediaStore.Images.Media.TITLE, title)
     values.put(MediaStore.Images.Media.DISPLAY_NAME, displayName)
     values.put(MediaStore.Images.Media.MIME_TYPE, mimeType)
+    if (folderName.isNonEmpty()) {
+        values.put(MediaStore.Images.Media.RELATIVE_PATH, folderName)
+    }
     // Add the date meta data to ensure the image is added at the front of the gallery
     values.put(MediaStore.Images.Media.DATE_ADDED, System.currentTimeMillis())
     values.put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
     try {
-        val uri = insert(MediaStore.Files.getContentUri("external"), values)
+        val uri = insert(uri, values)
         if (uri != null) {
             val imageOut = openOutputStream(uri)
             try {
@@ -270,7 +284,7 @@ fun ContentResolver.deleteFile(uri: Uri?): Boolean {
  * @param source 图片文件
  * @param description 文件描述
  */
-fun Context.saveImageToGallery(source: File, description: String): String? {
+fun Context.saveImageToGallery(source: File, description: String): Uri? {
     return saveImageToGallery(source, source.name, description)
 }
 
@@ -279,7 +293,7 @@ fun Context.saveImageToGallery(source: File, description: String): String? {
  * @param source 图片文件
  * @param description 文件描述
  */
-fun Context.saveImageToGallery(source: File, fileName: String, description: String): String? {
+fun Context.saveImageToGallery(source: File, fileName: String, description: String): Uri? {
     return saveImageToGallery(source.absolutePath, fileName, description)
 }
 
@@ -288,11 +302,11 @@ fun Context.saveImageToGallery(source: File, fileName: String, description: Stri
  * @param path 图片路径
  * @param description 文件描述
  */
-fun Context.saveImageToGallery(path: String, description: String): String? {
-    return saveImageToGallery(path, path.createFileName("jpg"), description)
+fun Context.saveImageToGallery(path: String, description: String): Uri? {
+    return saveImageToGallery(path, (path.fetchFileName() ?: "IMG") + "_".createFileName("jpg"), description)
 }
 
-fun Context.saveImageToGallery(path: String, fileName: String, description: String): String? {
+fun Context.saveImageToGallery(path: String, fileName: String, description: String): Uri? {
     return saveBitmapToGallery(BitmapFactory.decodeFile(path), fileName, description)
 }
 
@@ -302,8 +316,26 @@ fun Context.saveImageToGallery(path: String, fileName: String, description: Stri
  * @param title 文件显示名称
  * @param description 文件描述
  */
-fun Context.saveBitmapToGallery(source: Bitmap, title: String, description: String): String? {
-    return contentResolver.saveBitmapToGallery(source, title, description)
+fun Context.saveBitmapToGallery(source: Bitmap, title: String, description: String): Uri? {
+    return saveBitmapToGallery(
+        folderName = "",
+        source = source,
+        title = title,
+        description = description
+    )
+}
+
+/**
+ * 保存一个图片[source]到相册
+ * @param source 图片对象
+ * @param title 文件显示名称
+ * @param description 文件描述
+ */
+fun Context.saveBitmapToGallery(
+    uri: Uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+    folderName: String = "", source: Bitmap, title: String, description: String,
+): Uri? {
+    return contentResolver.saveBitmapToGallery(uri, folderName, source, title, description)
 }
 
 /**
@@ -323,12 +355,14 @@ fun Context.saveFileToExternal(source: File, mimeType: String): Uri? {
  * @version 1.0
  */
 fun Context.saveFileToExternal(
+    uri: Uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+    folderName: String = "",
     source: File,
     displayName: String,
     title: String,
     mimeType: String,
 ): Uri? {
-    return contentResolver.saveFileToExternal(source, displayName, title, mimeType)
+    return contentResolver.saveFileToExternal(uri, folderName, source, displayName, title, mimeType)
 }
 
 /**
@@ -338,11 +372,11 @@ fun Context.saveFileToExternal(
  * @version 1.0
  */
 fun Context.saveFileToExternal(source: File, displayName: String, mimeType: String): Uri? {
-    return contentResolver.saveFileToExternal(
-        source,
-        displayName,
-        source.nameWithoutExtension,
-        mimeType
+    return saveFileToExternal(
+        source = source,
+        displayName = displayName,
+        title = source.nameWithoutExtension,
+        mimeType = mimeType
     )
 }
 
@@ -397,11 +431,38 @@ fun Context.getFieldFromContentUri(contentUri: Uri?, columnName: String): String
  */
 fun ContentResolver.getFieldFromContentUri(contentUri: Uri?, columnName: String): String? {
     return contentUri?.let { uri ->
-        val column = arrayOf(columnName)
+        val columnNames = arrayOf(columnName)
         val sel: String
         val cursor = try {
             val wholeID = DocumentsContract.getDocumentId(uri)
             val id = wholeID.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1]
+            // where id is equal to
+            sel = MediaStore.Files.FileColumns._ID + "=?"
+            query(uri, columnNames, sel, arrayOf(id), null)
+        } catch (e: Throwable) {
+            e.printStackTrace()
+            query(uri, columnNames, null, null, null)
+        }
+        return cursor?.use {
+            cursor.moveToFirst()
+            val result = cursor.getString(columnName)
+            if (result.isNonEmpty()) {
+                return result
+            }
+            null
+        }
+    }
+}
+
+
+fun ContentResolver.getFileFromContentUri(contentUri: Uri?): File? {
+    return contentUri?.let { uri ->
+        val column = arrayOf(MediaStore.Images.Media.DATA)
+        val sel: String
+        val cursor = try {
+            val wholeID = DocumentsContract.getDocumentId(uri)
+            val id =
+                wholeID.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1]
             // where id is equal to
             sel = MediaStore.Images.Media._ID + "=?"
             query(
@@ -415,16 +476,34 @@ fun ContentResolver.getFieldFromContentUri(contentUri: Uri?, columnName: String)
             )
         }
         return cursor?.use {
-            val columnNames = cursor.columnNames
-            val columnIndex = cursor.getColumnIndex(columnNames[0])
-            cursor.moveToFirst()
-            val result = cursor.getString(columnIndex)
-            if (result.isNonEmpty()) {
-                return result
+            try {
+                val columnNames = cursor.columnNames
+                cursor.moveToFirst()
+                dLog { " getRealPathFromURI>>>>>>cursor.columnNames:${columnNames.contentToString()}" }
+//                val columnIndex = cursor.getString(column[0])
+                val filePath = cursor.getString(column[0])
+                if (filePath.isNonEmpty()) {
+                    val file = File(filePath)
+                    if (file.exists()) {
+                        return file
+                    }
+                }
+                dLog {
+                    "getFileFromContentUri>>>>>>filePath :$filePath,columnIndex:${
+                        cursor.getColumnIndex(
+                            column[0]
+                        )
+                    }"
+                }
+                null
+            } catch (e: Throwable) {
+                e.printStackTrace()
+                dLog { "getFileFromContentUri>>>>>>e:${e.message}" }
+                null
             }
-            null
         }
     }
+
 }
 
 

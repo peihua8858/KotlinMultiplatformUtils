@@ -24,6 +24,7 @@ import androidx.core.view.marginStart
 import androidx.core.view.marginTop
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.peihua.tools.ContextInitializer
+import com.peihua.tools.listener.OnNoDoubleClickListener
 import java.lang.Exception
 import java.util.*
 import kotlin.math.max

@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ItemDecoration
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import com.fz.common.view.utils.isAppRtl
+import com.peihua.tools.utils.isAppRtl
 
 /**
  * 瀑布流布局列表间距,理论上支持3列以上

@@ -52,7 +52,6 @@ fun CharSequence?.isPositiveInteger(): Boolean {
 fun CharSequence?.isNegativeInteger(): Boolean {
     return isNonEmpty() && matches("^-[1-9]d*$".toRegex())
 }
-
 /**
  * 验证文本是否是浮点数
  *
@@ -144,14 +143,14 @@ fun CharSequence?.isPhoneNumber(): Boolean {
  * @date 2020/7/10 21:41
  * @version 1.0
  */
-fun Any?.generatePrivacyNickname(originNickname: String, defaultName: String): String {
-    if (originNickname.isEmpty()) {
+fun String?.generatePrivacyNickname(defaultName: String): String {
+    if (this.isNullOrEmpty()) {
         return defaultName
     }
-    return if (originNickname.length == 1) {
-        "$originNickname*****"
-    } else originNickname[0] + "*****" +
-            originNickname[originNickname.length - 1]
+    return if (this.length == 1) {
+        "$this*****"
+    } else this[0] + "*****" +
+            this[this.length - 1]
 }
 
 /**
@@ -162,7 +161,7 @@ fun Any?.generatePrivacyNickname(originNickname: String, defaultName: String): S
  * @date 2021/8/31 14:09
  * @version 1.0
  */
-fun CharSequence?.splice(text: String?, separator: String): CharSequence {
+fun CharSequence?.joinToString(text: String?, separator: String = ","): CharSequence {
     if (this.isNonEmpty()) {
         if (text.isNonEmpty()) {
             return "$this$separator$text"
@@ -170,17 +169,6 @@ fun CharSequence?.splice(text: String?, separator: String): CharSequence {
         return this
     }
     return ""
-}
-
-/**
- * 字符串拼接，以逗号分隔
- * @param text
- * @author dingpeihua
- * @date 2021/8/31 14:09
- * @version 1.0
- */
-fun CharSequence?.splice(text: String?): CharSequence {
-    return splice(text, ",")
 }
 
 /**
@@ -213,3 +201,12 @@ inline fun <C : CharSequence> C?.ifNullOrEmpty(defaultValue: () -> C): C =
 @SinceKotlin("1.3")
 inline fun <C : CharSequence> C?.ifNullOrBlank(defaultValue: () -> C): C =
     if (isNullOrBlank()) defaultValue() else this
+
+
+@OptIn(ExperimentalContracts::class)
+fun CharSequence?.ifEmptyOrBlank(defaultValue: () -> CharSequence): CharSequence {
+    contract {
+        returns(false) implies (this@ifEmptyOrBlank != null)
+    }
+    return this ?: defaultValue()
+}

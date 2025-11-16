@@ -5,11 +5,10 @@ package com.peihua.tools.utils
 
 import android.content.Context
 import android.content.res.ColorStateList
-import android.graphics.Color
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
-import com.peihua.tools.collections.splicing
+import androidx.core.graphics.toColorInt
 
 /**
  * 十六进制正则表达式
@@ -36,7 +35,7 @@ private const val HEX_MAX_LENGTH = 9
  * 解析#ccc、#cccccc、#cccccccc三种形式
  */
 @ColorInt
-fun CharSequence?.parseColor(@ColorInt defaultColor: Int = Color.BLACK): Int {
+fun CharSequence?.parseColor(@ColorInt defaultColor: Int = android.graphics.Color.BLACK): Int {
     this ?: return defaultColor
     if (isHexColor()) {
         var color = this.toString()
@@ -44,7 +43,7 @@ fun CharSequence?.parseColor(@ColorInt defaultColor: Int = Color.BLACK): Int {
             color = color.toHexColor()
             if (color.isEmpty()) return defaultColor
         }
-        return Color.parseColor(color)
+        return color.toColorInt()
     }
     return defaultColor
 }
@@ -61,7 +60,7 @@ fun String.toHexColor(): String {
     for (c in color) {
         result.add(c.toString().repeat(2))
     }
-    return firstChar + result.splicing("")
+    return firstChar + result.joinToString("")
 }
 
 /**
@@ -82,7 +81,7 @@ fun CharSequence?.isHexColor(): Boolean {
 }
 
 /**
- * 将十六进制颜色值转换成颜色数值，转换失败默认返回[Integer.MAX_VALUE]
+ * 将十六进制颜色值转换成颜色数值，转换失败默认返回[android.graphics.Color.TRANSPARENT]
  *
  * @param color 十六进制颜色值
  * @author dingpeihua
@@ -90,8 +89,8 @@ fun CharSequence?.isHexColor(): Boolean {
  * @version 1.0
  */
 @ColorInt
-fun Any?.getColorInt(color: String): Int {
-    return getColorInt(color, Int.MAX_VALUE)
+fun String?.getColorInt(): Int {
+    return getColorInt(android.graphics.Color.TRANSPARENT)
 }
 
 /**
@@ -104,8 +103,8 @@ fun Any?.getColorInt(color: String): Int {
  * @version 1.0
  */
 @ColorInt
-fun Any?.getColorInt(color: String?, @ColorInt defaultColor: Int): Int {
-    return color.parseColor(defaultColor)
+fun String?.getColorInt(@ColorInt defaultColor: Int): Int {
+    return parseColor(defaultColor)
 }
 
 /**
@@ -118,17 +117,17 @@ fun Any?.getColorInt(color: String?, @ColorInt defaultColor: Int): Int {
  * @version 1.0
  */
 fun Any?.getColorStateList(normalColor: String, pressedColor: String): ColorStateList {
-    val normalColorInt = getColorInt(normalColor)
-    val pressedColorInt = getColorInt(pressedColor)
+    val normalColorInt = normalColor.getColorInt()
+    val pressedColorInt = pressedColor.getColorInt()
     return if (normalColorInt != -1 && pressedColorInt != -1) {
         getColorStateList(normalColorInt, pressedColorInt)
-    } else ColorStateList(arrayOf(), intArrayOf(Color.WHITE))
+    } else ColorStateList(arrayOf(), intArrayOf(android.graphics.Color.WHITE))
 }
 
 fun Any?.getColorStateList(
     context: Context?,
     @ColorRes normalColorRes: Int,
-    @ColorRes pressedColorRes: Int
+    @ColorRes pressedColorRes: Int,
 ): ColorStateList {
     return getColorStateList(
         ContextCompat.getColor(context!!, normalColorRes),
@@ -161,7 +160,7 @@ fun Any?.getColorStateList(@ColorInt normalColor: Int, @ColorInt selectedColor: 
 fun Any?.getColorStateList(
     @ColorInt normalColor: Int,
     disabledColor: Int,
-    @ColorInt selectedColor: Int
+    @ColorInt selectedColor: Int,
 ): ColorStateList {
     val states = arrayOf(
         intArrayOf(android.R.attr.state_enabled),

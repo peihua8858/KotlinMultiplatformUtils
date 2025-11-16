@@ -13,9 +13,9 @@ import androidx.appcompat.widget.LinearLayoutCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ItemDecoration
-import com.fz.common.utils.getColor
-import com.fz.common.utils.getDrawable
-import com.fz.common.view.utils.dip2px
+import com.peihua.tools.utils.dip2px
+import com.peihua.tools.utils.getColor
+import com.peihua.tools.utils.getDrawableCompat
 import com.socks.library.KLog
 
 /**
@@ -71,7 +71,7 @@ class DividerItemDecoration : ItemDecoration {
     }
 
     constructor(@DrawableRes drawable: Int) {
-        mDivider = getDrawable(drawable)
+        mDivider = getDrawableCompat(drawable)
         dividerSize = dip2px(1)
     }
 

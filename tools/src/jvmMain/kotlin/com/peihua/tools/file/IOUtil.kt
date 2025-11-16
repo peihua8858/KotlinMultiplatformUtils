@@ -3,39 +3,26 @@
 
 package com.peihua.tools.file
 
-import android.database.Cursor
-import android.os.Looper
-import androidx.annotation.NonNull
-import com.fz.common.utils.dLog
+import com.peihua.tools.utils.dLog
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import java.io.*
 import java.util.zip.CRC32
 import java.util.zip.ZipOutputStream
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.coroutineContext
 
 fun Closeable?.close() {
     if (this != null) {
         try {
             close()
         } catch (e: Throwable) {
-            e.printStackTrace()
-            KLog.e(e)
+            dLog { e.stackTraceToString() }
         }
     }
 }
 
-fun Cursor?.closeQuietly() {
-    if (this != null) {
-        try {
-            this.close()
-        } catch (e: Throwable) {
-            KLog.e(e)
-        }
-    }
-}
 
 @Throws(Exception::class)
 fun InputStream?.readBytes(): ByteArray? {
@@ -80,7 +67,6 @@ fun InputStream?.readBytes(skip: Long, size: Int): ByteArray? {
  */
 @JvmOverloads
 @Throws(IOException::class)
-@NonNull
 fun InputStream?.readStr(charset: String = "UTF-8"): String {
     return this?.let { input ->
         BufferedInputStream(input).use { input1 ->
@@ -192,10 +178,10 @@ suspend fun InputStream.writeToFileNoClose(
     callback: (progress: Long, speed: Long) -> Unit = { process, speed -> },
 ): Boolean {
     try {
-        val context: CoroutineContext = if (Looper.myLooper() == Looper.getMainLooper()) {
+        val context: CoroutineContext = if (currentCoroutineContext() == Dispatchers.Main) {
             Dispatchers.IO
         } else {
-            coroutineContext
+            currentCoroutineContext()
         }
         val fis = this
         return withContext(context) {

@@ -3,16 +3,33 @@
 
 package com.peihua.tools.file
 
-import kotlin.math.max
-import kotlin.coroutines.resume
-import kotlin.jvm.JvmName
-import kotlin.io.*
+import com.peihua.tools.array.isNonEmpty
+import com.peihua.tools.utils.dLog
+import com.peihua.tools.utils.isNonEmpty
+import com.peihua.tools.utils.no
+import com.peihua.tools.utils.yes
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.io.IOException
+import kotlinx.io.files.FileNotFoundException
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.InputStream
+import java.io.OutputStream
+import java.io.UnsupportedEncodingException
+import java.nio.ByteBuffer
 import java.nio.charset.Charset
+import java.text.DateFormat
 import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.Random
 import java.util.regex.Matcher
 import java.util.regex.Pattern
-import java.util.Date
-import kotlin.jvm.JvmMultifileClass
+import java.util.zip.CRC32
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
+import kotlin.coroutines.resume
 
 val UTF8: Charset = Charset.forName("UTF-8")
 private val sf = SimpleDateFormat("yyyyMMdd_HHmmssSS")
@@ -198,7 +215,7 @@ fun CharSequence?.deleteDirectory(): Boolean {
  * @param file 文件或目录对象
  */
 fun File?.delete(): Boolean {
-    if (!isNull()) {
+    if (this != null) {
         if (isFile) {
             return deleteFile()
         } else if (isDirectory) {
@@ -235,7 +252,7 @@ fun File?.write(content: String?, append: Boolean = false): Boolean {
     }
     try {
         FileOutputStream(this, append).use { fos ->
-            KLog.d("write --> content==$content")
+            dLog { "write --> content==$content" }
             fos.write(content.toByteArray(charset("utf-8")), 0, content.length)
             fos.flush()
             return true
@@ -297,7 +314,7 @@ fun String?.read(): String? {
 
 fun File?.createFile(): Boolean {
     try {
-        if (isNotNull()) {
+        if (this != null) {
             return this.createNewFile()
         }
     } catch (e: IOException) {
@@ -374,70 +391,6 @@ fun File?.copyToFile(dest: InputStream?): Boolean {
     return false
 }
 
-fun File?.writeBitmapToFile(
-    bitmap: Bitmap?,
-    fileName: String?,
-    deleteParentAllFile: Boolean,
-): File? {
-    if (fileName == null) {
-        return null
-    }
-    if (deleteParentAllFile) {
-        val isDelete = delete()
-        KLog.d("LockWriteFile>>>isDelete:$isDelete")
-    }
-    if (!exists()) {
-        mkdirs()
-    }
-    val image = File(this, fileName)
-    return image.writeBitmapToFile(bitmap)
-}
-
-fun File?.writeBitmapToFile(bitmap: Bitmap?): File? {
-    if (this == null || bitmap == null) {
-        return null
-    }
-    try {
-        FileOutputStream(this).use { outStream ->
-            bitmap.compress(
-                Bitmap.CompressFormat.JPEG,
-                100,
-                outStream
-            )
-        }
-    } catch (e: Exception) {
-        e.printStackTrace()
-    } finally {
-        bitmap.recycle()
-    }
-    return this
-}
-
-fun Bitmap?.writeBitmapToFile(outFile: File): File? {
-    return if (outFile.isFile) {
-        outFile.writeBitmapToFile(this)
-    } else outFile.writeBitmapToFile(this, false)
-}
-
-fun File?.writeBitmapToFile(bitmap: Bitmap?, deleteFile: Boolean): File? {
-    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-    val rand = Random()
-    val randomNum = rand.nextInt(1000 + 1)
-    val fileName = "IMG_$timeStamp$randomNum.jpg"
-    return writeBitmapToFile(bitmap, fileName, deleteFile)
-}
-
-fun File?.notifyScanFile(context: Context) {
-    if (this != null && exists()) {
-        try {
-            //保存图片后发送广播通知更新数据库
-            val uri = Uri.fromFile(this)
-            context.sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri))
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-}
 
 fun File.writeImageToFile(data: ByteArray?): File? {
     return if (this.isFile) {
@@ -463,7 +416,7 @@ fun File?.writeToFile(
     }
     if (deleteParentAllFile) {
         val isDelete = delete()
-        KLog.d("LockWriteFile>>>isDelete:$isDelete")
+        dLog { "LockWriteFile>>>isDelete:$isDelete" }
     }
     if (!exists()) {
         mkdirs()
@@ -478,7 +431,7 @@ fun File?.writeToFile(data: InputStream?, deleteFile: Boolean = false): File? {
     }
     if (deleteFile) {
         val isDelete = delete()
-        KLog.d("LockWriteFile>>>isDelete:$isDelete")
+        dLog { "LockWriteFile>>>isDelete:$isDelete" }
     }
     try {
         FileOutputStream(this).use { outStream ->
@@ -496,7 +449,6 @@ fun File?.writeToFile(data: InputStream?, deleteFile: Boolean = false): File? {
     }
     return this
 }
-
 
 
 fun File?.writeToFile(data: ByteArray?): File? {
@@ -615,33 +567,6 @@ fun calculate(length: Long): String {
     }
 }
 
-/**
- * 文件转base64字符串
- *
- * @return
- */
-fun File?.toBase64(): String {
-    if (!this.exists()) {
-        return ""
-    }
-    try {
-        var base64: String
-        FileInputStream(this).use {
-            val bytes = ByteArray(it.available())
-            val length = it.read(bytes)
-            base64 = Base64.encodeToString(bytes, 0, length, Base64.NO_WRAP)
-        }
-        return base64
-    } catch (e: FileNotFoundException) {
-        e.printStackTrace()
-    } catch (e: IOException) {
-        e.printStackTrace()
-    } catch (e: OutOfMemoryError) {
-        e.printStackTrace()
-    }
-    return ""
-}
-
 fun String?.splitFileName(): Array<String>? {
     if (this == null) {
         return null
@@ -657,42 +582,6 @@ fun String?.splitFileName(): Array<String>? {
         return arrayOf(name, extension)
     }
     return null
-}
-
-fun Context.getFileNameByUri(uri: Uri): String? {
-    var result: String? = null
-    if (uri.scheme == "content") {
-        contentResolver.query(uri, null, null, null, null).use { cursor ->
-            if (cursor != null && cursor.moveToFirst()) {
-                val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                result = cursor.getString(index)
-            }
-        }
-    }
-    if (result == null) {
-        result = uri.path
-        val cut = result?.lastIndexOf(File.separator) ?: -1
-        if (cut != -1) {
-            result = result?.substring(cut + 1)
-        }
-    }
-    return result
-}
-
-fun Context.getRealPathFromURI(contentUri: Uri): String? {
-    return contentResolver.query(
-        contentUri,
-        null, null, null, null
-    )
-        .use { cursor ->
-            if (cursor == null) {
-                contentUri.path
-            } else {
-                cursor.moveToFirst()
-                val index = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA)
-                cursor.getString(index)
-            }
-        }
 }
 
 /**
@@ -768,62 +657,6 @@ val MIME_MAP_TABLE = arrayOf(
 )
 
 /**
- * 打开文件
- *
- * @param file
- */
-@Throws(Exception::class)
-fun File?.openFile(context: Context) {
-    openFile(context, getMIMEType())
-}
-
-/**
- * 打开文件
- *
- * @param file
- */
-fun File?.openFile(context: Context, type: String?) {
-    this?.let {
-        //判断是否是AndroidN以及更高的版本
-        val contentUri: Uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) { //android 7.0
-            FileProvider.getUriForFile(
-                context, context.packageName + ".fileProvider",
-                it
-            )
-        } else {
-            Uri.fromFile(it)
-        }
-        openFile(context, type, contentUri)
-    }
-}
-
-/**
- * 打开文件
- *
- * @param contentUri
- */
-fun Any.openFile(context: Context, type: String?, contentUri: Uri?) {
-    val intent = Intent()
-    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        //android 7.0
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-    }
-    //设置intent的Action属性
-    intent.action = Intent.ACTION_VIEW
-    //设置intent的data和Type属性。
-    intent.setDataAndType(contentUri, type)
-    //跳转
-    context.startActivity(
-        Intent.createChooser(
-            intent,
-            context.getString(R.string.text_choose_application)
-        )
-    )
-}
-
-/**
  * 根据文件后缀名获得对应的MIME类型。
  *
  * @param file
@@ -838,7 +671,7 @@ fun File?.getMIMEType(): String {
             return type
         }
         /* 获取文件的后缀名 */
-        val end = fName.substring(dotIndex).toLowerCase()
+        val end = fName.substring(dotIndex).lowercase()
         if (end === "") return type
         //在MIME和文件类型的匹配表中找到对应的MIME类型。
         for (i in MIME_MAP_TABLE.indices) {
@@ -851,45 +684,7 @@ fun File?.getMIMEType(): String {
     } ?: ""
 }
 
-/**
- * 使用DownloadManger下载指定url文件
- *
- * @param context 上下文
- * @param url     需要下载的文件url
- * @return 返回当前下载的文件
- * @author dingpeihua
- * @date 2016/5/5 9:18
- * @version 1.0
- */
-fun Any.downLoadFile(context: Context, url: String, mimeType: String?, fileName: String?): Long {
-    KLog.d("Update_APP", "mainactivity,you clicked positive button")
-    var downloadId: Long = 0
-    try {
-        // 获取下载服务
-        val manager = context.downloadManager
-        // 创建下载请求
-        val down = DownloadManager.Request(Uri.parse(url))
-        // 设置允许使用的网络类型，这里是移动网络和wifi都可以
-        down.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
-        // 发出通知并下载,(false指禁止发出通知，即后台下载）
-        down.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-        if (mimeType.isNonEmpty()) {
-            down.setMimeType(mimeType)
-        }
-        // 显示下载界面
-        down.setVisibleInDownloadsUi(true)
-        down.setDescription(context.getString(R.string.precessing))
-        // 设置下载后文件存放的位置
-        down.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
-        // 将下载请求放入队列
-        downloadId = manager?.enqueue(down) ?: 0
-    } catch (e: java.lang.Exception) {
-        e.printStackTrace()
-    }
-    return downloadId
-}
 
-@SuppressLint("SimpleDateFormat")
 fun Any?.writeLog(logFolder: File, message: String) {
     val dateFormat: DateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     val time: String = dateFormat.format(Date())
@@ -969,21 +764,6 @@ fun File?.getFileSize(): Long {
 
 fun File?.formatSize(): String {
     return getFileSize().formatFileSize()
-}
-
-private val separator = File.separator
-private fun Context.cachePath(cacheName: String): String {
-    val cachePath = getDiskCacheDir()
-    return "${if (cachePath != null) cachePath.absolutePath else cacheDir.absolutePath}${separator}$cacheName$separator"
-}
-
-fun Context.cacheFile(cacheName: String): File {
-    val cachePath = cachePath(cacheName)
-    val file = File(cachePath)
-    if (!file.exists()) {
-        file.mkdirs()
-    }
-    return file
 }
 
 /**
@@ -1105,101 +885,6 @@ suspend fun FileInputStream.copyToFile(
     }
 }
 
-fun File.decodeFileToBitmap(screenWidth: Int, screenHeight: Int): Bitmap? {
-    try {
-        val mScreenWidth = screenWidth
-        val mScreenHeight = screenHeight
-        val o = BitmapFactory.Options()
-        o.inJustDecodeBounds = true
-        BitmapFactory.decodeStream(FileInputStream(this), null, o)
-        dLog { "decodeFileToBitmap, o: $o" }
-        val width_tmp = o.outWidth
-        val height_tmp = o.outHeight
-        var scale = 1
-        if (width_tmp <= mScreenWidth && height_tmp <= mScreenHeight) {
-            scale = 1
-        } else {
-            val widthFit: Double = width_tmp * 1.0 / mScreenWidth
-            val heightFit: Double = height_tmp * 1.0 / mScreenHeight
-            val fit = max(widthFit, heightFit)
-            scale = (fit + 0.5).toInt()
-        }
-        dLog { "decodeFileToBitmap, scale: $scale,width_tmp:$width_tmp,height_tmp:$height_tmp" }
-        var bitmap: Bitmap? = null
-        if (scale == 1) {
-            bitmap = BitmapFactory.decodeStream(FileInputStream(this))
-        } else {
-            val o2 = BitmapFactory.Options()
-            o2.inSampleSize = scale
-            bitmap = BitmapFactory.decodeStream(FileInputStream(this), null, o2)
-        }
-        if (bitmap != null) {
-            eLog { "scale = " + scale + " bitmap.size = " + (bitmap.getRowBytes() * bitmap.getHeight()) }
-        }
-        dLog { "decodeFileToBitmap, bitmap: $bitmap" }
-        return bitmap
-    } catch (e: Throwable) {
-        eLog { "fileNotFoundException, e: $e" }
-    }
-    return null
-}
-
-
-fun File.adjustBitmapOrientation(): Bitmap? {
-    return try {
-        var exifInterface: ExifInterface? = null
-        var bitmap = BitmapFactory.decodeStream(FileInputStream(this))
-        try {
-            exifInterface = ExifInterface(this)
-        } catch (e: Throwable) {
-            e.printStackTrace()
-        }
-        val matrix = orientationMatrix
-        dLog { "adjustBitmapOrientation, adjust degree " + matrix + "to 0." }
-        Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true)
-    } catch (e: Throwable) {
-        e.printStackTrace()
-        null
-    }
-}
-
-val File.orientationMatrix: Matrix
-    get() {
-        val matrix = Matrix()
-        try {
-            val exif = ExifInterface(this)
-            val orientation =
-                exif.getAttributeInt(
-                    ExifInterface.TAG_ORIENTATION,
-                    ExifInterface.ORIENTATION_NORMAL
-                )
-
-            when (orientation) {
-                ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.setScale(-1f, 1f)
-                ExifInterface.ORIENTATION_ROTATE_180 -> matrix.setRotate(180f)
-                ExifInterface.ORIENTATION_FLIP_VERTICAL -> {
-                    matrix.setRotate(180f)
-                    matrix.postScale(-1f, 1f)
-                }
-
-                ExifInterface.ORIENTATION_TRANSPOSE -> {
-                    matrix.setRotate(90f)
-                    matrix.postScale(-1f, 1f)
-                }
-
-                ExifInterface.ORIENTATION_ROTATE_90 -> matrix.setRotate(90f)
-                ExifInterface.ORIENTATION_TRANSVERSE -> {
-                    matrix.setRotate(-90f)
-                    matrix.postScale(-1f, 1f)
-                }
-
-                ExifInterface.ORIENTATION_ROTATE_270 -> matrix.setRotate(-90f)
-            }
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-        return matrix
-    }
 
 /**
  * 获取一个文件的CRC32值
@@ -1207,17 +892,3 @@ val File.orientationMatrix: Matrix
 @get:Throws(java.lang.Exception::class)
 val File.cRC32: CRC32
     get() = FileInputStream(this).cRC32
-
-
-val File.mimeTypeFromFilePath: String?
-    get() {
-        return name.mimeTypeFromFilePath
-    }
-
-val String.mimeTypeFromFilePath: String?
-    get() {
-        val extension = substringAfterLast('.', "")
-        dLog { "openWithFile>>>>extension：$extension" }
-        return MimeTypeMap.getSingleton()
-            .getMimeTypeFromExtension(extension)
-    }

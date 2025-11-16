@@ -11,7 +11,7 @@ import kotlin.contracts.contract
 
 /**
  * 对象深度拷贝
- * [T] extend [Serializable]
+ * [V] extend [Serializable]
  * @author dingpeihua
  * @date 2021/3/2 15:29
  * @version 1.0

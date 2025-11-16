@@ -19,7 +19,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.ViewPropertyAnimatorListener
 import androidx.fragment.app.Fragment
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
-import com.fz.common.text.isNonEmpty
+import com.peihua.tools.utils.isNonEmpty
 
 /**
  * 显示view

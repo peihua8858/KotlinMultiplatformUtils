@@ -196,7 +196,7 @@ fun Any?.resolveAttribute(
     resId: Int,
     @StyleRes defaultRes: Int,
 ): Int {
-    val resourceId = resolveAttribute(context, resId)
+    val resourceId = context.resolveAttribute(resId)
     return if (resourceId != 0) {
         resourceId
     } else defaultRes
@@ -211,8 +211,9 @@ fun Any?.resolveAttribute(
  * @date 2020/7/7 10:31
  * @version 1.0
  */
-fun Any?.resolveAttribute(context: Context, resId: Int): Int {
+fun Context?.resolveAttribute(resId: Int): Int {
     val outValue = TypedValue()
+    val context: Context = this ?: ContextInitializer.context
     context.theme.resolveAttribute(resId, outValue, true)
     return outValue.resourceId
 }

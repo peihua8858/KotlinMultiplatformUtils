@@ -8,64 +8,8 @@ fun <T> Array<T>?.isNonEmpty(): Boolean {
     contract {
         returns(true) implies (this@isNonEmpty != null)
     }
-    return this != null && size > 0 && isNotEmpty()
+    return this != null && isNotEmpty() && isNotEmpty()
 }
-
-/**
- * 数组转成String输出
- *
- * @param <T>   泛型参数，数组中放置的元素数据类型
- * @return 如果集合不为空返回输出字符串，否则返回""
-</T> */
-@Deprecated("please use splicing method.", ReplaceWith("splicing()"))
-fun <T> Array<T>.string(): String {
-    return toString(",")
-}
-
-/**
- * 集合转成String输出
- *
- * @param list      集合
- * @param <T>       泛型参数，集合中放置的元素数据类型
- * @param separator 分隔符
- * @return 如果集合不为空返回输出字符串，否则返回"null"
-</T> */
-@Deprecated("please use splicing method.", ReplaceWith("splicing(separator)"))
-fun <T> Array<T>.toString(separator: String): String {
-    return splicing(separator)
-}
-
-/**
- * 集合转成String输出
- *
- * @param <T>  泛型参数，集合中放置的元素数据类型
- * @return 如果集合不为空返回输出字符串，否则返回"null"
- */
-fun <T> Array<T>.splicing(): String {
-    return splicing(",")
-}
-
-/**
- * 集合转成String输出
- *
- * @param <T>       泛型参数，集合中放置的元素数据类型
- * @param separator 分隔符
- * @return 如果集合不为空返回输出字符串，否则返回"null"
- */
-fun <T> Array<T>.splicing(separator: String): String {
-    val sb = StringBuilder()
-    for (index in indices) {
-        val result = this[index]
-        if (result != null) {
-            sb.append(result)
-            if (index < size - 1) {
-                sb.append(separator)
-            }
-        }
-    }
-    return sb.toString()
-}
-
 
 /**
  * 返回匹配给定 [predicate] 的第一个元素，如果未找到元素，则返回默认返回索引[0]元素。

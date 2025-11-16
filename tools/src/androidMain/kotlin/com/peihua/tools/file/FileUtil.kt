@@ -833,7 +833,7 @@ fun File?.openFile(context: Context, type: String?) {
         } else {
             Uri.fromFile(it)
         }
-        openFile(context, type, contentUri)
+        context.openFile(type=type, contentUri =  contentUri)
     }
 }
 
@@ -842,7 +842,7 @@ fun File?.openFile(context: Context, type: String?) {
  *
  * @param contentUri
  */
-fun Any.openFile(context: Context, type: String?, contentUri: Uri?) {
+fun Context.openFile(title: String ="open with", type: String?, contentUri: Uri?) {
     val intent = Intent()
     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     if (isAtLeastN) {
@@ -855,7 +855,7 @@ fun Any.openFile(context: Context, type: String?, contentUri: Uri?) {
     //设置intent的data和Type属性。
     intent.setDataAndType(contentUri, type)
     //跳转
-    context.startActivity(Intent.createChooser(intent, context.getString(R.string.text_choose_application)))
+    startActivity(Intent.createChooser(intent, title))
 }
 
 /**
@@ -873,7 +873,7 @@ fun File?.getMIMEType(): String {
             return type
         }
         /* 获取文件的后缀名 */
-        val end = fName.substring(dotIndex).toLowerCase(Locale.US)
+        val end = fName.substring(dotIndex).lowercase()
         if (end === "") return type
         //在MIME和文件类型的匹配表中找到对应的MIME类型。
         for (i in MIME_MAP_TABLE.indices) {
@@ -913,7 +913,7 @@ fun Any.downLoadFile(context: Context, url: String, mimeType: String?, fileName:
         }
         // 显示下载界面
         down.setVisibleInDownloadsUi(true)
-        down.setDescription(context.getString(R.string.precessing))
+//        down.setDescription(context.getString(R.string.precessing))
         // 设置下载后文件存放的位置
         down.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
         // 将下载请求放入队列

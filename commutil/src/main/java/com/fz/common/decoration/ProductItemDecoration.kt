@@ -4,7 +4,7 @@ import android.graphics.Rect
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ItemDecoration
-import com.fz.common.view.utils.isAppRtl
+import com.peihua.tools.utils.isAppRtl
 
 /**
  * 商品列表间距

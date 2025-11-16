@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.scope.publishBuildArtifacts
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.kotlin.multiplatform.library)
@@ -33,7 +35,7 @@ kotlin {
     // project can be found here:
     // https://developer.android.com/kotlin/multiplatform/migrate
     val xcfName = "toolsKit"
-
+    jvm()
     iosX64 {
         binaries.framework {
             baseName = xcfName
@@ -52,15 +54,14 @@ kotlin {
         }
     }
 
-    // Source set declarations.
-    // Declaring a target automatically creates a source set with the same name. By default, the
-    // Kotlin Gradle Plugin creates additional source sets that depend on each other, since it is
-    // common to share sources between related targets.
+    // 源集声明。
+    //声明目标会自动创建具有相同名称的源集。默认情况下，
+    //Kotlin Gradle 插件会创建相互依赖的其他源代码集，因为它是
+    //在相关目标之间共享源。
     // See: https://kotlinlang.org/docs/multiplatform-hierarchy.html
     sourceSets {
         commonMain {
             dependencies {
-//                implementation(libs.ktor.client.core.jvm)
                 implementation(libs.kotlin.stdlib)
                 implementation("org.jetbrains.kotlin:kotlin-stdlib:2.2.20")
                 implementation(libs.kotlinx.coroutines.core)
@@ -68,15 +69,15 @@ kotlin {
                 // Add KMP dependencies here
             }
         }
-//        jvmMain{
-//            dependencies {
-//                implementation(kotlin("stdlib"))
-//                implementation("org.jetbrains.kotlin:kotlin-stdlib:2.2.20")
-//                // Add KMP dependencies here
-//                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.21")
-//                implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.8.0")
-//            }
-//        }
+        jvmMain{
+            dependencies {
+                implementation(kotlin("stdlib"))
+                implementation("org.jetbrains.kotlin:kotlin-stdlib:2.2.20")
+                // Add KMP dependencies here
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.21")
+                implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.8.0")
+            }
+        }
 
         commonTest {
             dependencies {
@@ -126,4 +127,4 @@ kotlin {
     }
 
 }
-
+apply(from = "push_maven1.gradle")

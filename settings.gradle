@@ -24,9 +24,9 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "KotlinCommonUtils"
-include ':app'
+rootProject.name = "KotlinMultiplatformUtils"
+//include ':app'
 include ':commutil'
 include ':comose'
-include ':core'
+//include ':core'
 include ':tools'

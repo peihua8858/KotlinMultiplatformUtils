@@ -55,18 +55,21 @@ fun Any?.toDouble(defaultValue: Double = 0.00): Double {
         is Double -> {
             return this
         }
+
         is Number -> {
             return this.toDouble()
         }
+
         is String -> {
             try {
                 return this.toDoubleOrNull() ?: defaultValue
             } catch (ignored: Exception) {
             }
         }
+
         else -> {
             try {
-                return this.toString().toDoubleOrNull()?: defaultValue
+                return this.toString().toDoubleOrNull() ?: defaultValue
             } catch (ignored: NumberFormatException) {
             }
         }
@@ -94,18 +97,21 @@ fun Any?.toFloat(defaultValue: Float = 0.00f): Float {
         is Double -> {
             return this as Float
         }
+
         is Number -> {
             return this.toFloat()
         }
+
         is String -> {
             try {
-                return this.toFloatOrNull()?: defaultValue
+                return this.toFloatOrNull() ?: defaultValue
             } catch (ignored: Exception) {
             }
         }
+
         else -> {
             try {
-                return this.toString().toFloatOrNull()?: defaultValue
+                return this.toString().toFloatOrNull() ?: defaultValue
             } catch (ignored: NumberFormatException) {
             }
         }
@@ -134,18 +140,21 @@ fun Any?.toInteger(defaultValue: Int = 0): Int {
         is Int -> {
             return this
         }
+
         is Number -> {
             return this.toInt()
         }
+
         is String -> {
             try {
-                return this.toIntOrNull()?: defaultValue
+                return this.toIntOrNull() ?: defaultValue
             } catch (ignored: Exception) {
             }
         }
+
         else -> {
             try {
-                return this.toString().toIntOrNull()?: defaultValue
+                return this.toString().toIntOrNull() ?: defaultValue
             } catch (ignored: NumberFormatException) {
             }
         }
@@ -174,18 +183,21 @@ fun Any?.toLong(defaultValue: Long = 0L): Long {
         is Long -> {
             return this
         }
+
         is Number -> {
             return this.toLong()
         }
+
         is String -> {
             try {
-                return this.toLongOrNull()?: defaultValue
+                return this.toLongOrNull() ?: defaultValue
             } catch (ignored: NumberFormatException) {
             }
         }
+
         else -> {
             try {
-                return this.toString().toLongOrNull()?: defaultValue
+                return this.toString().toLongOrNull() ?: defaultValue
             } catch (ignored: NumberFormatException) {
             }
         }
@@ -193,28 +205,21 @@ fun Any?.toLong(defaultValue: Long = 0L): Long {
     return defaultValue
 }
 
-/**
- * 将Object对象转成String类型
- *
- * @return 如果value不能转成String，则默认""
- */
-fun Any?.toString(): String = toString("")
-
-/**
- * 将Object对象转成String类型
- *
- * @param value
- * @return 如果value不能转成String，则默认""
- */
-fun Any?.toString(defaultValue: String = ""): String {
-    return when {
-        this is String -> {
-            this
-        }
-        this != null -> {
-            this.toString()
-        }
-        else -> defaultValue
-    }
-}
+///**
+// * 将Object对象转成String类型
+// *
+// * @param value
+// * @return 如果value不能转成String，则默认""
+// */
+//fun Any?.toString(defaultValue: String): String {
+//    return when {
+//        this is String -> {
+//            this
+//        }
+//        this != null -> {
+//            this.toString()
+//        }
+//        else -> defaultValue
+//    }
+//}
 
