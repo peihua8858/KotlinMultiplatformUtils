@@ -1,25 +1,25 @@
 # Kotlin Android Util
-kotlinCommonUtils是一个Kotlin工具库，可以简化Android开发，使代码更加简洁和可读。
+KotlinMultiplatformUtils是一个Kotlin工具库，可以简化Android开发，使代码更加简洁和可读。
 
 [English](README_EN.md)
 
-[![Jitpack](https://jitpack.io/v/peihua8858/kotlinCommonUtils.svg)](https://github.com/peihua8858)
+[![Jitpack](https://jitpack.io/v/peihua8858/KotlinMultiplatformUtils.svg)](https://github.com/peihua8858)
 [![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen.svg)](https://github.com/peihua8858)
-[![Star](https://img.shields.io/github/stars/peihua8858/kotlinCommonUtils.svg)](https://github.com/peihua8858/kotlinCommonUtils)
+[![Star](https://img.shields.io/github/stars/peihua8858/KotlinMultiplatformUtils.svg)](https://github.com/peihua8858/KotlinMultiplatformUtils)
 
 
 ## 目录
--[最新版本](https://github.com/peihua8858/kotlinCommonUtils/releases/tag/1.1.1)<br>
+-[最新版本](https://github.com/peihua8858/KotlinMultiplatformUtils/releases/tag/1.1.1)<br>
 -[如何引用](#如何引用)<br>
 -[进阶使用](#进阶使用)<br>
 -[权限](#权限)<br>
--[如何提Issues](https://github.com/peihua8858/kotlinCommonUtils/wiki/%E5%A6%82%E4%BD%95%E6%8F%90Issues%3F)<br>
+-[如何提Issues](https://github.com/peihua8858/KotlinMultiplatformUtils/wiki/%E5%A6%82%E4%BD%95%E6%8F%90Issues%3F)<br>
 -[License](#License)<br>
 
 
 ## 如何引用
 * 把 `maven { url 'https://jitpack.io' }` 加入到 repositories 中
-* 添加如下依赖，末尾的「latestVersion」指的是kotlinCommonUtils [![Download](https://jitpack.io/v/peihua8858/kotlinCommonUtils.svg)](https://jitpack.io/#peihua8858/kotlinCommonUtils) 里的版本名称，请自行替换。
+* 添加如下依赖，末尾的「latestVersion」指的是KotlinMultiplatformUtils [![Download](https://jitpack.io/v/peihua8858/kotlinCommonUtils.svg)](https://jitpack.io/#peihua8858/KotlinMultiplatformUtils) 里的版本名称，请自行替换。
 使用 Gradle
 
 ```sh
@@ -31,7 +31,9 @@ repositories {
 
 dependencies {
   // KotlinCommonUtils
-  implementation 'com.github.peihua8858:kotlinCommonUtils:${latestVersion}'
+   implementation 'com.github.peihua8858.KotlinMultiplatformUtils:KotlinTools:${latestVersion}'
+  implementation 'com.github.peihua8858.KotlinMultiplatformUtils:KotlinTools-jvm:${latestVersion}'
+  implementation 'com.github.peihua8858.KotlinMultiplatformUtils:KotlinTools-android:${latestVersion}'
 }
 ```
 
@@ -86,30 +88,13 @@ if (map.isNonEmpty()) {
     result = map
 }
 ```
-3、权限 DSL用法
-[废弃，请使用 Androidx permissions](https://github.com/peihua8858/AndroidxPermissions.git)
-```kotlin
-import com.fz.common.permissions.requestPermissionsDsl
-@Deprecated("Use androidx permissions")
-requestPermissionsDsl(Manifest.permission.POST_NOTIFICATIONS) {
-    onDenied {
-         showToast("Denied")
-    }
-    onNeverAskAgain {
-         showToast("Never ask again")
-    }
-    onGranted {
-        showToast("Granted")
-    }
-}
-```
-4、使用ContentProvider保存图片文件到sd卡
+3、使用ContentProvider保存图片文件到sd卡
 ```kotlin
 import com.fz.common.utils.saveImageToGallery
 val imageFile = File("D://images/5.jpg")
 context.saveImageToGallery(imageFile, imageFile.name)
 ```
-5、ViewModel协程用法
+4、ViewModel协程用法
 ```kotlin
 import com.fz.common.model.ViewModelState
 class BottomTopMatchViewModel : ViewModel() {
@@ -171,7 +156,7 @@ viewModel.matchTypeState2.observe(this) {
     }
 }
 ```
-6、网络状态
+5、网络状态
 ```kotlin
 //kotlin  or java
 import com.fz.common.network.NetworkUtil
@@ -181,7 +166,7 @@ if (NetworkUtil.isConnected(context, true)) {
     showToast("Disconnected from the network. ")
 }
 ```
-7、视图动画
+6、视图动画
 ```kotlin
 import com.fz.common.view.utils.animateIn
 import com.fz.common.view.utils.animateOut
@@ -217,7 +202,7 @@ View.animateOut(true){
 }
 //其他动画如：透明度动画（View.animateAlpha()）、宽度展开折叠(View.animationWidth)等
 ```
-8、Activity or Fragment 协程用法
+7、Activity or Fragment 协程用法
 ```kotlin
 import com.fz.common.utils.apiWithAsyncCreated
 Activity/Fragment.apiWithAsyncCreated<T>{
