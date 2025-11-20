@@ -70,7 +70,7 @@ dependencies {
 //    }
 //}
 group = 'com.github.peihua8858'
-version = '1.0.27'
+version = '1.0.0'
 afterEvaluate {
     publishing {
         publications {
@@ -78,7 +78,7 @@ afterEvaluate {
             release(MavenPublication) {
                 from components.findByName('release')
                 groupId = group
-                artifactId = 'kotlinCommonUtils'
+                artifactId = 'KotlinTools'
                 version = version
             }
         }
