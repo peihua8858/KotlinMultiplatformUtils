@@ -15,6 +15,8 @@ import androidx.core.app.ActivityOptionsCompat
 import androidx.core.app.ComponentActivity
 import androidx.core.content.ContextCompat
 import com.peihua8858.tools.ContextInitializer
+import com.peihua8858.tools.utils.getDimens
+import com.peihua8858.tools.utils.getResourceId
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 import com.peihua8858.tools.utils.resolveAttribute
